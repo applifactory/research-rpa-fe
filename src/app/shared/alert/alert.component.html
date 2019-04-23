@@ -1,0 +1,9 @@
+<div *ngFor="let alert of alerts$ | async" class="alert alert-{{alert.type}} alert-dismissible" role="alert">
+  <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+    <span (click)="remove(alert)" aria-hidden="true">×</span>
+  </button>
+  <strong>
+    <i class="fa fa-{{alertIcons[alert.type]}}"></i> 
+    {{alert.message}}
+  </strong>
+</div>
