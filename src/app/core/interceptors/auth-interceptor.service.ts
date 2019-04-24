@@ -10,10 +10,12 @@ export class AuthInterceptor implements HttpInterceptor {
 
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const token: string = this.authService.getAuthToken();
-    if ( token ) {
-      req.headers.append('Authorization', `JWT ${token}`);
-    }
-    return next.handle(req);
+    const request = req.clone({
+      setHeaders: {
+        Authorization: `JWT ${token}`
+      }
+    });
+    return next.handle(request);
   }
 
 }
