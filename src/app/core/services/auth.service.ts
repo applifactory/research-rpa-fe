@@ -4,15 +4,24 @@ import { environment } from '@env';
 import { AuthResponse } from '../models/auth-response';
 
 import { map } from 'rxjs/operators';
+import { BehaviorSubject } from 'rxjs';
+import { User } from '../models/user';
+import { Router } from '@angular/router';
+import { AlertService } from '@app/shared/alert/alert.service';
+import { AlertType } from '@app/shared/alert/models/alert-type';
 
 const AUTH_TOKEN_KEY: string = 'AuthToken';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable()
 export class AuthService {
 
-  constructor(private readonly http: HttpClient) { }
+  public user$: BehaviorSubject<User> = new BehaviorSubject<User>(null);
+
+  constructor(
+    private readonly http: HttpClient,
+    private readonly router: Router,
+    private readonly alert: AlertService
+  ) {}
 
   public getAuthToken(): string {
     return localStorage.getItem(AUTH_TOKEN_KEY)
@@ -35,15 +44,43 @@ export class AuthService {
         map( (response) => <AuthResponse>response ),
       ).toPromise();
     } catch (e) {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
+      this.logout();
       throw new Error('Login error');
     }
     if ( !response ) {
-      localStorage.removeItem(AUTH_TOKEN_KEY);
+      this.logout();
       throw new Error('Login error');
     }
     this.setAuthToken(response.accessToken);
+    await this.getCurrentUser();
+    this.router.navigate(['']);
     return true;
+  }
+
+  public logout() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    this.user$.next(null);
+    this.router.navigate(['login']);
+  }
+
+  public async isAuthorized(): Promise<boolean> {
+    const user: User = await this.getCurrentUser();
+    if ( !user ) {
+      this.alert.add('Please login', AlertType.Danger);
+    }
+    return !!user;
+  }
+
+  public async getCurrentUser(): Promise<User> {
+    let user: User;
+    try {
+      user = <User>await this.http.get(`${environment.apiUrl}/user`).toPromise();
+    } catch (e) {
+      this.logout();
+      return null;
+    }
+    this.user$.next(user);
+    return user;
   }
 
 }

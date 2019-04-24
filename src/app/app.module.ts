@@ -6,6 +6,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { CoreModule } from './core/core.module';
 import { httpInterceptorProviders } from './core/interceptors';
+import { SharedModule } from './shared/shared.module';
 
 @NgModule({
   declarations: [
@@ -15,7 +16,8 @@ import { httpInterceptorProviders } from './core/interceptors';
     BrowserModule,
     HttpClientModule, 
     AppRoutingModule,
-    CoreModule.forRoot()
+    CoreModule.forRoot(),
+    SharedModule
   ],
   providers: [
     httpInterceptorProviders
