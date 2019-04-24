@@ -11,7 +11,10 @@ export class AlertService {
 
   public alerts$: BehaviorSubject<Alert[]> = new BehaviorSubject<Alert[]>([]);
 
-  public add( message: string, type: AlertType = AlertType.Info ): void {
+  public add( message: string, type: AlertType = AlertType.Info, hideAfter: number = 5000, removeExisting: boolean = false ): void {
+    if ( removeExisting ) {
+      this.removeAll();
+    }
     const alerts: Alert[] = Array.from(this.alerts$.value),
           id: string = uuid(),
           alert: Alert = {
@@ -21,7 +24,9 @@ export class AlertService {
           }
     alerts.push(alert);
     this.alerts$.next(alerts);
-    setTimeout( () => this.remove(alert), 5000 );
+    if ( hideAfter > 0 ) {
+      setTimeout( () => this.remove(alert), hideAfter );
+    }
   }
 
   public remove( alert: Alert ) {
@@ -31,6 +36,10 @@ export class AlertService {
       alerts.splice(index, 1);
       this.alerts$.next(alerts);
     }
+  }
+
+  public removeAll() {
+    this.alerts$.next([]);
   }
 
 }
