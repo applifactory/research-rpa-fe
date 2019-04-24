@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { environment } from '@env';
 import { AuthResponse } from '../models/auth-response';
 
@@ -31,7 +31,7 @@ export class AuthService {
     localStorage.setItem(AUTH_TOKEN_KEY, token);
   }
 
-  public async login(email: string, password: string): Promise<boolean> {
+  public async login(email: string, password: string): Promise<User> {
     let response: AuthResponse;
     try {
       response = await this.http.post(
@@ -45,16 +45,12 @@ export class AuthService {
       ).toPromise();
     } catch (e) {
       this.logout();
-      throw new Error('Login error');
-    }
-    if ( !response ) {
-      this.logout();
-      throw new Error('Login error');
+      throw new Error( e.error.message || e.statusText );
     }
     this.setAuthToken(response.accessToken);
-    await this.getCurrentUser();
+    const user: User = await this.getCurrentUser();
     this.router.navigate(['']);
-    return true;
+    return user;
   }
 
   public logout() {
@@ -66,7 +62,7 @@ export class AuthService {
   public async isAuthorized(): Promise<boolean> {
     const user: User = await this.getCurrentUser();
     if ( !user ) {
-      this.alert.add('Please login', AlertType.Danger);
+      this.alert.add('Please log in to access this resource', AlertType.Warning);
     }
     return !!user;
   }
